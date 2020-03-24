@@ -28,12 +28,7 @@ func (g *Group) Go(f func() error) {
 	go func() {
 		defer g.wg.Done()
 		if err := f(); err != nil {
-			g.mutex.Lock()
-			defer g.mutex.Unlock()
-			if g.err == nil {
-				g.err = err
-				close(g.ch)
-			}
+			g.Cancel(err)
 		}
 	}()
 }
@@ -52,4 +47,15 @@ func (g *Group) Wait() error {
 	case <-ch:
 	}
 	return g.err
+}
+
+// Cancel cancels this error group immediately with the given error, which will be
+// returned from Wait() as though it had been returned from a call to Go().
+func (g *Group) Cancel(err error) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
+	if g.err == nil {
+		g.err = err
+		close(g.ch)
+	}
 }

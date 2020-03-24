@@ -47,3 +47,14 @@ func TestErrorCall(t *testing.T) {
 	})
 	assert.Equal(t, err, g.Wait())
 }
+
+func TestCancel(t *testing.T) {
+	g := New()
+	err := fmt.Errorf("error mcerrface")
+	g.Go(func() error {
+		select{}  // never returns
+		return nil
+	})
+	g.Cancel(err)
+	assert.Equal(t, err, g.Wait())
+}
